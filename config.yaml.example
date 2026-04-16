@@ -1,15 +1,21 @@
 # Live Room Configuration
 live:
-  # Required: Live room ID
+  # Required: Live room ID (e.g., "7319483754668557238")
   id: ""
-  # Optional: Business-specific Cookie
+  # Required: Business-specific Cookie
   cookie: ""
 
 # IM Message Configuration
 im:
   # Optional: Business-specific Cookie
   cookie: ""
-  # Default Receiver ID
+  # Optional: Default Receiver ID
   receiver_id: ""
-  # Default Message Content
+  # Optional: Default Message Content
   message_text: ""
+
+# UI Theme Preference: light, dark, or blue (default: light)
+theme: "light"
+
+# Application Language (default: zh-CN)
+language: "zh-CN"
