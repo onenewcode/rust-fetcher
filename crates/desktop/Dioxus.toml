@@ -1,3 +1,19 @@
 [application]
 name = "fetcher-desktop"
 asset_dir = "assets"
+
+[bundle]
+identifier = "com.github.onenewcode.rust-fetcher"
+publisher = "onenewcode"
+icon = ["assets/icon.png"]
+
+[bundle.macos]
+minimum_system_version = "10.13"
+
+[bundle.windows.wix]
+template = "bundler/windows/installer.wxs"
+
+[bundle.windows.nsis]
+template = "bundler/windows/installer.nsi"
+install_mode = "PerMachine"
+start_menu_folder = "OneNewCode Rust Fetcher Desktop"
