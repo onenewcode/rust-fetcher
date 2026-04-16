@@ -1,0 +1,20 @@
+[package]
+name = "service"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+common.workspace = true
+live.workspace = true
+im.workspace = true
+tokio.workspace = true
+serde.workspace = true
+tracing.workspace = true
+rand.workspace = true
+serde_yaml.workspace = true
+
+[dev-dependencies]
+tempfile = "3.20"
+
