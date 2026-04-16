@@ -1,0 +1,15 @@
+# Live Room Configuration
+live:
+  # Required: Live room ID
+  id: ""
+  # Optional: Business-specific Cookie
+  cookie: ""
+
+# IM Message Configuration
+im:
+  # Optional: Business-specific Cookie
+  cookie: ""
+  # Default Receiver ID
+  receiver_id: ""
+  # Default Message Content
+  message_text: ""

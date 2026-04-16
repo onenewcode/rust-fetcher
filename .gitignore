@@ -1,0 +1,15 @@
+target/
+config.yaml
+logs/
+*.log
+.worktrees/
+
+.DS_Store
+.codex/
+exports/
+.zed/
+.vscode/
+DouYin_Spider-master/
+__pycache__/
+crates/desktop/assets/tailwind.css
+docs/superpowers/
