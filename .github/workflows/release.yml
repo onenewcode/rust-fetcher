@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-release:
+    name: Build & Release (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: macos
+            bundle_ext: dmg
+          - os: windows-latest
+            platform: windows
+            bundle_ext: msi
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Dioxus CLI
+        uses: taiki-e/install-action@v2
+        with:
+          tool: dioxus-cli@0.7.0
+
+      - name: Build and Bundle Desktop App
+        # dx bundle must be run from the directory containing Dioxus.toml
+        run: |
+          cd crates/desktop
+          dx bundle --release
+
+      - name: Prepare Release Assets
+        shell: bash
+        run: |
+          # Dioxus 0.7 outputs to [workspace_root]/target/dx/[app_name]/release/bundle/
+          APP_NAME="fetcher-desktop"
+          VERSION=${GITHUB_REF#refs/tags/v}
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            SOURCE_FILE=$(ls target/dx/$APP_NAME/release/bundle/macos/*.dmg)
+            cp "$SOURCE_FILE" "fetcher-desktop-v${VERSION}-macos.dmg"
+            echo "ASSET_PATH=fetcher-desktop-v${VERSION}-macos.dmg" >> $GITHUB_ENV
+          else
+            SOURCE_FILE=$(ls target/dx/$APP_NAME/release/bundle/msi/*.msi)
+            cp "$SOURCE_FILE" "fetcher-desktop-v${VERSION}-windows.msi"
+            echo "ASSET_PATH=fetcher-desktop-v${VERSION}-windows.msi" >> $GITHUB_ENV
+          fi
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ASSET_PATH }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

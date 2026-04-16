@@ -1,3 +1,8 @@
 [application]
 name = "fetcher-desktop"
 asset_dir = "assets"
+
+[bundle]
+identifier = "com.github.onenewcode.rust-fetcher"
+publisher = "DouyinFetcher"
+icon = ["assets/icon.png"]
