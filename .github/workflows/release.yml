@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-release:
+    name: Build & Release (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: macos
+          - os: windows-latest
+            platform: windows
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Dioxus CLI
+        run: cargo install dioxus-cli
+
+      - name: Build and Bundle (macOS)
+        if: matrix.platform == 'macos'
+        run: cd crates/desktop && dx bundle --package-types dmg --release
+
+      - name: Build and Bundle (Windows)
+        if: matrix.platform == 'windows'
+        run: cd crates/desktop && dx bundle --package-types msi --package-types  nsis --release
+
+      - name: Prepare Release Assets
+        shell: bash
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          if [ "${{ matrix.platform }}" = "macos" ]; then
+            DMG=$(find target/dx -name "*.dmg" | head -1)
+            cp "$DMG" "fetcher-desktop-v${VERSION}-macos.dmg"
+          else
+            MSI=$(find target/dx -name "*.msi" | head -1)
+            cp "$MSI" "fetcher-desktop-v${VERSION}-windows.msi"
+            EXE=$(find target/dx -name "*.exe" -not -path "*/deps/*" | head -1)
+            if [ -n "$EXE" ] && [ -f "$EXE" ]; then
+              cp "$EXE" "fetcher-desktop-v${VERSION}-windows.exe"
+            fi
+          fi
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            fetcher-desktop-*.dmg
+            fetcher-desktop-*.msi
+            fetcher-desktop-*.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
