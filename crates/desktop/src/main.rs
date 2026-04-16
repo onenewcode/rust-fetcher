@@ -1,5 +1,5 @@
 use desktop::App;
-use dioxus::desktop::muda::{Menu, MenuItem, PredefinedMenuItem, Submenu};
+use dioxus::desktop::muda::{Menu, MenuItem, Submenu};
 #[cfg(target_os = "macos")]
 use dioxus::desktop::tao::platform::macos::WindowBuilderExtMacOS;
 use dioxus::desktop::{Config, WindowBuilder};
@@ -11,7 +11,7 @@ fn main() {
         .ok()
         .flatten();
 
-    let mut window = WindowBuilder::new().with_title("Douyin Fetcher");
+    let window = WindowBuilder::new().with_title("Douyin Fetcher");
 
     #[cfg(target_os = "macos")]
     {
