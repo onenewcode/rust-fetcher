@@ -1,0 +1,3 @@
+[application]
+name = "fetcher-desktop"
+asset_dir = "assets"

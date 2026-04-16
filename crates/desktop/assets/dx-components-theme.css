@@ -1,0 +1,137 @@
+/* This file contains the global styles for the styled dioxus components. You only
+ * need to import this file once in your project root.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+
+html[data-theme="dark"] {
+  --dark: initial;
+  --light: ;
+}
+
+html[data-theme="light"] {
+  --dark: ;
+  --light: initial;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --dark: initial;
+    --light: ;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --dark: ;
+    --light: initial;
+  }
+}
+
+:root {
+  /* Primary colors */
+  --primary-color: var(--dark, #000) var(--light, #fff);
+  --primary-color-1: var(--dark, #0e0e0e) var(--light, #fbfbfb);
+  --primary-color-2: var(--dark, #0a0a0a) var(--light, #fff);
+  --primary-color-3: var(--dark, #0f0f0f) var(--light, #f9fafb);
+  --primary-color-4: var(--dark, #151515) var(--light, #f3f4f6);
+  --primary-color-5: var(--dark, #1e1e1e) var(--light, #e5e7eb);
+  --primary-color-6: var(--dark, #262626) var(--light, #d1d5db);
+  --primary-color-7: var(--dark, #404040) var(--light, #9ca3af);
+
+  /* Secondary colors */
+  --secondary-color: var(--dark, #f9fafb) var(--light, #111827);
+  --secondary-color-1: var(--dark, #f3f4f6) var(--light, #1f2937);
+  --secondary-color-2: var(--dark, #e5e7eb) var(--light, #374151);
+  --secondary-color-3: var(--dark, #d1d5db) var(--light, #4b5563);
+  --secondary-color-4: var(--dark, #9ca3af) var(--light, #6b7280);
+  --secondary-color-5: var(--dark, #6b7280) var(--light, #9ca3af);
+  --secondary-color-6: var(--dark, #4b5563) var(--light, #d1d5db);
+
+  /* Accent colors */
+  --accent-color: #6366f1;
+  --accent-muted: rgba(99, 102, 241, 0.1);
+  --radius: 0.5rem;
+  --focused-border-color: var(--accent-color);
+  --primary-success-color: #065f46;
+  --secondary-success-color: #10b981;
+  --primary-warning-color: #92400e;
+  --secondary-warning-color: #f59e0b;
+  --primary-error-color: #991b1b;
+  --secondary-error-color: #ef4444;
+  --contrast-error-color: #ffffff;
+}
+
+body {
+  color: var(--secondary-color);
+  background-color: var(--primary-color-3);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin: 0;
+  transition: background-color 0.2s, color 0.2s;
+  overflow: hidden;
+}
+
+/* Global Component Overrides (Clean & Professional) */
+.input, .textarea {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.card {
+  border: 1px solid var(--primary-color-6) !important;
+  background-color: var(--primary-color-2) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05) !important;
+}
+
+.card-header {
+  padding: 1rem 1.25rem !important;
+  border-bottom: 1px solid var(--primary-color-6) !important;
+}
+
+.card-title {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  color: var(--secondary-color) !important;
+}
+
+.card-description {
+  font-size: 0.8rem !important;
+  color: var(--secondary-color-5) !important;
+}
+
+.card-content {
+  padding: 1.25rem !important;
+}
+
+/* Sidebar Styling */
+.sidebar-inner {
+  background: var(--primary-color-2) !important;
+  border-right: 1px solid var(--primary-color-6) !important;
+}
+
+.sidebar-menu-button[data-active="true"] {
+  background: var(--accent-muted) !important;
+  color: var(--accent-color) !important;
+  font-weight: 600 !important;
+}
+
+.sidebar-group-label {
+  text-transform: uppercase !important;
+  font-size: 0.65rem !important;
+  letter-spacing: 0.05em !important;
+  font-weight: 700 !important;
+  color: var(--secondary-color-5) !important;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color-6);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-color-5);
+}

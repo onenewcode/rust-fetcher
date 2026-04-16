@@ -1,0 +1,42 @@
+/* 
+ * Custom themes overriding Dioxus framework defaults.
+ * This file is loaded after dx-components-theme.css.
+ */
+
+html[data-theme="blue"] {
+  /* Primary colors (Deep Blue/Slate hues) */
+  --primary-color: #0f172a;
+  --primary-color-1: #1e293b;
+  --primary-color-2: #0f172a;
+  --primary-color-3: #1e293b;
+  --primary-color-4: #334155;
+  --primary-color-5: #475569;
+  --primary-color-6: #64748b;
+  --primary-color-7: #94a3b8;
+
+  /* Secondary colors (Text over blue) */
+  --secondary-color: #f8fafc;
+  --secondary-color-1: #f1f5f9;
+  --secondary-color-2: #e2e8f0;
+  --secondary-color-3: #cbd5e1;
+  --secondary-color-4: #94a3b8;
+  --secondary-color-5: #64748b;
+  --secondary-color-6: #475569;
+
+  /* Accent colors */
+  --accent-color: #3b82f6;
+  --accent-muted: rgba(59, 130, 246, 0.1);
+  
+  /* Shared variables */
+  --radius: 0.5rem;
+  --focused-border-color: var(--accent-color);
+  
+  /* Status colors */
+  --primary-success-color: #065f46;
+  --secondary-success-color: #10b981;
+  --primary-warning-color: #92400e;
+  --secondary-warning-color: #f59e0b;
+  --primary-error-color: #991b1b;
+  --secondary-error-color: #ef4444;
+  --contrast-error-color: #ffffff;
+}

@@ -1,0 +1,13 @@
+[package]
+name = "cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+common.workspace = true
+im.workspace = true
+service.workspace = true
+clap.workspace = true
+tokio.workspace = true
+anyhow.workspace = true
