@@ -21,10 +21,8 @@ jobs:
         include:
           - os: macos-latest
             platform: macos
-            bundle_ext: dmg
           - os: windows-latest
             platform: windows
-            bundle_ext: msi
 
     steps:
       - name: Checkout code
@@ -41,35 +39,38 @@ jobs:
       - name: Install Dioxus CLI
         uses: taiki-e/install-action@v2
         with:
-          tool: dioxus-cli@0.7.0
+          tool: dioxus-cli
 
-      - name: Build and Bundle Desktop App
-        # dx bundle must be run from the directory containing Dioxus.toml
-        run: |
-          cd crates/desktop
-          dx bundle --release
+      - name: Build and Bundle (macOS)
+        if: matrix.platform == 'macos'
+        run: cd crates/desktop && dx bundle --package-types dmg --release
+
+      - name: Build and Bundle (Windows)
+        if: matrix.platform == 'windows'
+        run: cd crates/desktop && dx bundle --package-types msi,exe --release
 
       - name: Prepare Release Assets
         shell: bash
         run: |
-          # Dioxus 0.7 outputs to [workspace_root]/target/dx/[app_name]/release/bundle/
-          APP_NAME="fetcher-desktop"
           VERSION=${GITHUB_REF#refs/tags/v}
-          if [ "${{ matrix.os }}" = "macos-latest" ]; then
-            SOURCE_FILE=$(ls target/dx/$APP_NAME/release/bundle/macos/*.dmg)
-            cp "$SOURCE_FILE" "fetcher-desktop-v${VERSION}-macos.dmg"
-            echo "ASSET_PATH=fetcher-desktop-v${VERSION}-macos.dmg" >> $GITHUB_ENV
+          if [ "${{ matrix.platform }}" = "macos" ]; then
+            DMG=$(find target/dx -name "*.dmg" | head -1)
+            cp "$DMG" "fetcher-desktop-v${VERSION}-macos.dmg"
           else
-            SOURCE_FILE=$(ls target/dx/$APP_NAME/release/bundle/msi/*.msi)
-            cp "$SOURCE_FILE" "fetcher-desktop-v${VERSION}-windows.msi"
-            echo "ASSET_PATH=fetcher-desktop-v${VERSION}-windows.msi" >> $GITHUB_ENV
+            MSI=$(find target/dx -name "*.msi" | head -1)
+            cp "$MSI" "fetcher-desktop-v${VERSION}-windows.msi"
+            EXE=$(find target/dx -name "*.exe" -not -path "*/deps/*" | head -1)
+            if [ -n "$EXE" ] && [ -f "$EXE" ]; then
+              cp "$EXE" "fetcher-desktop-v${VERSION}-windows.exe"
+            fi
           fi
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ env.ASSET_PATH }}
-          draft: false
-          prerelease: false
+          files: |
+            fetcher-desktop-*.dmg
+            fetcher-desktop-*.msi
+            fetcher-desktop-*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
