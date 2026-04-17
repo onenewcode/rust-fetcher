@@ -45,7 +45,7 @@ jobs:
 
       - name: Build and Bundle (Windows)
         if: matrix.platform == 'windows'
-        run: cd crates/desktop && dx bundle --package-types msi,exe --release
+        run: cd crates/desktop && dx bundle --package-types msi --package-types exe --release
 
       - name: Prepare Release Assets
         shell: bash
