@@ -37,9 +37,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install Dioxus CLI
-        uses: taiki-e/install-action@v2
-        with:
-          tool: dioxus-cli
+        run: cargo install dioxus-cli
 
       - name: Build and Bundle (macOS)
         if: matrix.platform == 'macos'
