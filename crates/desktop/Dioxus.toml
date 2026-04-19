@@ -4,5 +4,20 @@ asset_dir = "assets"
 
 [bundle]
 identifier = "com.github.onenewcode.rust-fetcher"
-publisher = "DouyinFetcher"
+publisher = "onenewcode"
 icon = ["assets/icon.png"]
+
+[bundle.macos]
+minimum_system_version = "10.13"
+hardened_runtime = true
+
+[bundle.windows]
+sign_command = { cmd = "powershell", args = ["-Command", "if ([string]::IsNullOrWhiteSpace($env:WINDOWS_CERTIFICATE_THUMBPRINT)) { exit 0 }; $timestampUrl = $env:WINDOWS_TIMESTAMP_URL; if ([string]::IsNullOrWhiteSpace($timestampUrl)) { $timestampUrl = 'http://timestamp.digicert.com' }; signtool.exe sign /fd sha256 /sha1 $env:WINDOWS_CERTIFICATE_THUMBPRINT /t $timestampUrl '%1'"] }
+
+[bundle.windows.wix]
+template = "bundler/windows/installer.wxs"
+
+[bundle.windows.nsis]
+template = "bundler/windows/installer.nsi"
+install_mode = "PerMachine"
+start_menu_folder = "OneNewCode Rust Fetcher Desktop"

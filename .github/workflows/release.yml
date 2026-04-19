@@ -21,8 +21,18 @@ jobs:
         include:
           - os: macos-latest
             platform: macos
+            bundle_command: dx bundle --package-types dmg --release
           - os: windows-latest
             platform: windows
+            bundle_command: dx bundle --package-types msi --package-types nsis --release
+    env:
+      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+      WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+      WINDOWS_CERTIFICATE_THUMBPRINT: ${{ vars.WINDOWS_CERTIFICATE_THUMBPRINT }}
+      WINDOWS_TIMESTAMP_URL: ${{ vars.WINDOWS_TIMESTAMP_URL || 'http://timestamp.digicert.com' }}
 
     steps:
       - name: Checkout code
@@ -37,15 +47,96 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install Dioxus CLI
-        run: cargo install dioxus-cli
+        run: cargo install dioxus-cli --locked
 
-      - name: Build and Bundle (macOS)
-        if: matrix.platform == 'macos'
-        run: cd crates/desktop && dx bundle --package-types dmg --release
+      - name: Validate macOS signing inputs
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          if [ -z "$APPLE_CERTIFICATE" ] || [ -z "$APPLE_CERTIFICATE_PASSWORD" ] || [ -z "$APPLE_SIGNING_IDENTITY" ]; then
+            echo "Missing Apple signing secrets."
+            exit 1
+          fi
 
-      - name: Build and Bundle (Windows)
-        if: matrix.platform == 'windows'
-        run: cd crates/desktop && dx bundle --package-types msi --package-types  nsis --release
+      - name: Import Apple signing certificate
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          CERTIFICATE_PATH="$RUNNER_TEMP/apple-certificate.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+
+          echo "$APPLE_CERTIFICATE" | base64 --decode > "$CERTIFICATE_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security default-keychain -d user -s "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+          security import "$CERTIFICATE_PATH" -k "$KEYCHAIN_PATH" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+
+      - name: Validate Windows signing inputs
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if (
+            [string]::IsNullOrWhiteSpace($env:WINDOWS_CERTIFICATE) -or
+            [string]::IsNullOrWhiteSpace($env:WINDOWS_CERTIFICATE_PASSWORD) -or
+            [string]::IsNullOrWhiteSpace($env:WINDOWS_CERTIFICATE_THUMBPRINT)
+          ) {
+            throw 'Missing Windows signing inputs.'
+          }
+
+      - name: Import Windows signing certificate
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $certificateDir = Join-Path $env:RUNNER_TEMP 'windows-certificate'
+          New-Item -ItemType Directory -Path $certificateDir -Force | Out-Null
+
+          $base64Path = Join-Path $certificateDir 'certificate.txt'
+          $pfxPath = Join-Path $certificateDir 'certificate.pfx'
+
+          Set-Content -Path $base64Path -Value $env:WINDOWS_CERTIFICATE
+          certutil -decode $base64Path $pfxPath | Out-Null
+
+          $password = ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+          Import-PfxCertificate -FilePath $pfxPath -Password $password -CertStoreLocation Cert:\CurrentUser\My | Out-Null
+
+      - name: Build and Bundle
+        working-directory: crates/desktop
+        run: ${{ matrix.bundle_command }}
+
+      - name: Verify macOS signature
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          APP_PATH="$(find target/dx -name "*.app" -print -quit)"
+          if [ -z "$APP_PATH" ]; then
+            echo "No macOS app bundle found in target/dx."
+            exit 1
+          fi
+
+          codesign --verify --deep --strict "$APP_PATH"
+
+      - name: Verify Windows signatures
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $artifacts = Get-ChildItem -Path 'target\dx' -Recurse -Include *.msi,*.exe |
+            Where-Object { $_.FullName -notmatch '\\deps\\' }
+          if (-not $artifacts) {
+            throw 'No Windows bundle artifacts found in target\dx.'
+          }
+
+          foreach ($artifact in $artifacts) {
+            $signature = Get-AuthenticodeSignature -FilePath $artifact.FullName
+            if ($signature.Status -eq 'NotSigned' -or -not $signature.SignerCertificate) {
+              throw "Missing Authenticode signature on $($artifact.FullName)."
+            }
+          }
 
       - name: Prepare Release Assets
         shell: bash
@@ -57,9 +148,9 @@ jobs:
           else
             MSI=$(find target/dx -name "*.msi" | head -1)
             cp "$MSI" "fetcher-desktop-v${VERSION}-windows.msi"
-            EXE=$(find target/dx -name "*.exe" -not -path "*/deps/*" | head -1)
+            EXE=$(find target/dx -name "*-setup.exe" -not -path "*/deps/*" | head -1)
             if [ -n "$EXE" ] && [ -f "$EXE" ]; then
-              cp "$EXE" "fetcher-desktop-v${VERSION}-windows.exe"
+              cp "$EXE" "fetcher-desktop-v${VERSION}-windows-setup.exe"
             fi
           fi
 
